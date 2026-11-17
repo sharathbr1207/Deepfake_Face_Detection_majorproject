@@ -1,0 +1,149 @@
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>DeepGuard Results</title>
+        <style>
+        /* -------- Global Page Styling -------- */
+        body {
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: #0d0d0d;
+            color: #fff;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* -------- Result Container -------- */
+        .result-container {
+            max-width: 600px;
+            margin: 80px auto;
+            padding: 40px;
+            background: #1a1a1a;
+            border-radius: 16px;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+            text-align: center;
+            animation: fadeIn 0.6s ease-in-out;
+        }
+
+        /* Fade-in Animation */
+        @keyframes fadeIn {
+            from {
+            opacity: 0;
+            transform: translateY(20px);
+            }
+            to {
+            opacity: 1;
+            transform: translateY(0);
+            }
+        }
+
+        /* -------- Heading styles -------- */
+        .title {
+            font-size: 32px;
+            font-weight: bold;
+            color: #00eaff;
+            margin-bottom: 20px;
+        }
+
+        .sub {
+            font-size: 22px;
+            margin-bottom: 10px;
+        }
+
+        .highlight {
+            color: #00ffaa;
+            font-weight: bold;
+        }
+
+        /* -------- Result Colors -------- */
+        .fake {
+            color: #ff4444;
+            font-weight: bold;
+            font-size: 26px;
+        }
+
+        .real {
+            color: #44ff44;
+            font-weight: bold;
+            font-size: 26px;
+        }
+
+        /* Confidence score text */
+        .confidence {
+            margin-top: 15px;
+            font-size: 18px;
+            color: #ccc;
+        }
+
+        /* -------- Error Message -------- */
+        .error-box {
+            background: #ff3333;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+
+        /* -------- Button -------- */
+        .btn {
+            display: inline-block;
+            margin-top: 25px;
+            padding: 12px 30px;
+            background: #00eaff;
+            color: #000;
+            border-radius: 10px;
+            font-size: 18px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: 0.3s ease-in-out;
+        }
+
+        .btn:hover {
+            background: #00bcd4;
+            color: #fff;
+            box-shadow: 0 0 12px rgba(0, 255, 255, 0.4);
+        }
+        .image-section {
+            margin-top: 2.5rem;
+        }
+
+        .section-title {
+            margin-bottom: 1rem;
+            font-size: 1.4rem;
+        }
+
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        
+        </style>
+    </head>
+
+    <body>
+        <div class="result-container">
+        {% if error %}
+        <div class="error-box">{{ error }}</div>
+        {% else %}
+        <h1 class="title">Deepfake Detection Result</h1>
+
+        <h2 class="sub">Type: <span class="highlight">{{ filetype }}</span></h2>
+
+        <h2 class="sub">
+            Result: {% if result == "FAKE" %}
+            <span class="fake">FAKE</span>
+            {% else %}
+            <span class="real">REAL</span>
+            {% endif %}
+        </h2>
+
+        <!-- <p class="confidence">Confidence Score: {{ confidence }}%</p> -->
+        {% endif %}
+
+        <a href="/" class="btn">Analyze Another File</a>
+        </div>
+    </body>
+    </html>

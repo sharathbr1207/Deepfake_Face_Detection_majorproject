@@ -1,0 +1,274 @@
+import os
+import math
+import random
+import numpy as np
+from io import BytesIO
+import cv2
+from PIL import Image, ImageChops, ImageEnhance
+
+import tensorflow as tf
+from tensorflow.keras.utils import Sequence
+from tensorflow.keras.models import Model, Sequential
+from tensorflow.keras.layers import (
+    Input, Conv2D, MaxPooling2D, GlobalAveragePooling2D,
+    Dense, Dropout, TimeDistributed, LSTM, BatchNormalization
+)
+from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLROnPlateau
+from tensorflow.keras.optimizers import Adam
+
+
+# CONFIG
+
+DATASET_ROOT = "dataset"
+IMG_SIZE = (128, 128)
+NUM_FRAMES = 20
+BATCH_IMAGE = 32
+BATCH_VIDEO = 4
+EPOCH_IMAGE = 15
+EPOCH_VIDEO = 20
+LR = 1e-4
+ELA_QUALITY = 90
+
+OUTPUT_IMAGE_MODEL = "ela_cnn_image_model.keras"
+OUTPUT_VIDEO_MODEL = "ela_cnn_lstm_video_model.keras"
+
+random.seed(42)
+np.random.seed(42)
+tf.random.set_seed(42)
+
+# ELA FUNCTION
+
+def convert_to_ela(pil_img, quality=ELA_QUALITY):
+    """Convert an image into its ELA version."""
+    try:
+        buf = BytesIO()
+        pil_img.save(buf, "JPEG", quality=quality)
+        buf.seek(0)
+        compressed = Image.open(buf)
+
+        ela_img = ImageChops.difference(pil_img, compressed)
+
+        extrema = ela_img.getextrema()
+        max_diff = max([e[1] for e in extrema])
+        max_diff = max(max_diff, 1)
+
+        scale = 255.0 / max_diff
+        ela_img = ImageEnhance.Brightness(ela_img).enhance(scale)
+        ela_img = ela_img.resize(IMG_SIZE)
+
+        arr = np.asarray(ela_img).astype("float32") / 255.0
+        return arr
+
+    except Exception:
+        fallback = pil_img.resize(IMG_SIZE)
+        return np.asarray(fallback).astype("float32") / 255.0
+
+# IMAGE DATA GENERATOR WITH VALIDATION SPLIT
+
+class ImageSeq(Sequence):
+    def __init__(self, files, labels, batch_size=BATCH_IMAGE):
+        self.files = files
+        self.labels = labels
+        self.batch_size = batch_size
+
+    def __len__(self):
+        return math.ceil(len(self.files) / self.batch_size)
+
+    def __getitem__(self, index):
+        batch_files = self.files[index * self.batch_size: (index+1) * self.batch_size]
+        batch_labels = self.labels[index * self.batch_size: (index+1) * self.batch_size]
+
+        X = np.zeros((len(batch_files), IMG_SIZE[0], IMG_SIZE[1], 3))
+        y = np.array(batch_labels)
+
+        for i, fp in enumerate(batch_files):
+            try:
+                img = Image.open(fp).convert("RGB")
+                X[i] = convert_to_ela(img)
+            except:
+                X[i] = np.zeros((IMG_SIZE[0], IMG_SIZE[1], 3))
+
+        return X, y
+
+
+# VIDEO GENERATOR
+
+class VideoSeq(Sequence):
+    def __init__(self, files, labels, batch_size=BATCH_VIDEO):
+        self.files = files
+        self.labels = labels
+        self.batch_size = batch_size
+
+    def __len__(self):
+        return math.ceil(len(self.files) / self.batch_size)
+
+    def extract_frames(self, path):
+        cap = cv2.VideoCapture(path)
+        total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        if total <= 1:
+            cap.release()
+            return np.zeros((NUM_FRAMES, IMG_SIZE[0], IMG_SIZE[1], 3))
+
+        idxs = np.linspace(0, total-1, NUM_FRAMES).astype(int)
+        frames = []
+
+        for idx in idxs:
+            cap.set(cv2.CAP_PROP_POS_FRAMES, idx)
+            ret, frame = cap.read()
+
+            if not ret:
+                frames.append(np.zeros((IMG_SIZE[0], IMG_SIZE[1], 3)))
+                continue
+
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            pil = Image.fromarray(frame)
+            ela = convert_to_ela(pil)
+            frames.append(ela)
+
+        cap.release()
+        return np.array(frames)
+
+    def __getitem__(self, index):
+        batch_files = self.files[index*self.batch_size:(index+1)*self.batch_size]
+        batch_labels = self.labels[index*self.batch_size:(index+1)*self.batch_size]
+
+        X = np.zeros((len(batch_files), NUM_FRAMES, IMG_SIZE[0], IMG_SIZE[1], 3))
+        y = np.array(batch_labels)
+
+        for i, fp in enumerate(batch_files):
+            X[i] = self.extract_frames(fp)
+
+        return X, y
+
+
+
+# BUILD IMAGE CNN MODEL
+
+def build_image_model():
+    m = Sequential([
+        Input(shape=(IMG_SIZE[0], IMG_SIZE[1], 3)),
+        Conv2D(32, 3, activation="relu", padding="same"),
+        MaxPooling2D(),
+        BatchNormalization(),
+
+        Conv2D(64, 3, activation="relu", padding="same"),
+        MaxPooling2D(),
+        BatchNormalization(),
+
+        Conv2D(128, 3, activation="relu", padding="same"),
+        MaxPooling2D(),
+        BatchNormalization(),
+
+        GlobalAveragePooling2D(),
+        Dense(128, activation="relu"),
+        Dropout(0.3),
+        Dense(1, activation="sigmoid")
+    ])
+
+    m.compile(optimizer=Adam(LR), loss="binary_crossentropy", metrics=["accuracy"])
+    return m
+
+# ======================================================================
+# BUILD VIDEO MODEL
+# ======================================================================
+def build_video_model():
+    inp = Input(shape=(NUM_FRAMES, IMG_SIZE[0], IMG_SIZE[1], 3))
+
+    # frame feature extractor
+    f = Sequential([
+        Conv2D(32, 3, activation="relu", padding="same"),
+        MaxPooling2D(),
+        BatchNormalization(),
+        Conv2D(64, 3, activation="relu", padding="same"),
+        MaxPooling2D(),
+        BatchNormalization(),
+        GlobalAveragePooling2D(),
+    ])
+
+    td = TimeDistributed(f)(inp)
+    x = LSTM(128)(td)
+    x = Dropout(0.4)(x)
+    x = Dense(64, activation="relu")(x)
+    out = Dense(1, activation="sigmoid")(x)
+
+    model = Model(inp, out)
+    model.compile(optimizer=Adam(LR), loss="binary_crossentropy", metrics=["accuracy"])
+    return model
+
+
+# TRAIN PIPELINE
+
+def train():
+    # Load image paths
+    img_real = sorted([os.path.join(DATASET_ROOT, "images/real", x) for x in os.listdir(DATASET_ROOT+"/images/real")])
+    img_fake = sorted([os.path.join(DATASET_ROOT, "images/fake", x) for x in os.listdir(DATASET_ROOT+"/images/fake")])
+
+    vid_real = sorted([os.path.join(DATASET_ROOT, "videos/real", x) for x in os.listdir(DATASET_ROOT+"/videos/real")])
+    vid_fake = sorted([os.path.join(DATASET_ROOT, "videos/fake", x) for x in os.listdir(DATASET_ROOT+"/videos/fake")])
+
+    # Labels
+    imgs = img_real + img_fake
+    imgs_label = [0]*len(img_real) + [1]*len(img_fake)
+
+    vids = vid_real + vid_fake
+    vids_label = [0]*len(vid_real) + [1]*len(vid_fake)
+
+    # Shuffle & split
+    combined_img = list(zip(imgs, imgs_label))
+    random.shuffle(combined_img)
+    imgs, imgs_label = zip(*combined_img)
+
+    split = int(0.8 * len(imgs))
+    train_img, val_img = imgs[:split], imgs[split:]
+    train_img_y, val_img_y = imgs_label[:split], imgs_label[split:]
+
+    img_train_gen = ImageSeq(train_img, train_img_y)
+    img_val_gen = ImageSeq(val_img, val_img_y)
+
+    # Train Image Model
+    image_model = build_image_model()
+    image_model.fit(
+        img_train_gen,
+        validation_data=img_val_gen,
+        epochs=EPOCH_IMAGE,
+        callbacks=[
+            ModelCheckpoint(OUTPUT_IMAGE_MODEL, save_best_only=True, monitor="val_loss"),
+            EarlyStopping(monitor="val_loss", patience=5, restore_best_weights=True),
+            ReduceLROnPlateau(monitor="val_loss", patience=3)
+        ]
+    )
+    image_model.save(OUTPUT_IMAGE_MODEL)
+
+    # Shuffle & split for video
+    combined_vid = list(zip(vids, vids_label))
+    random.shuffle(combined_vid)
+    vids, vids_label = zip(*combined_vid)
+
+    split = int(0.8 * len(vids))
+    train_vid, val_vid = vids[:split], vids[split:]
+    train_vid_y, val_vid_y = vids_label[:split], vids_label[split:]
+
+    vid_train_gen = VideoSeq(train_vid, train_vid_y)
+    vid_val_gen = VideoSeq(val_vid, val_vid_y)
+
+    # Train Video Model
+    video_model = build_video_model()
+    video_model.fit(
+        vid_train_gen,
+        validation_data=vid_val_gen,
+        epochs=EPOCH_VIDEO,
+        callbacks=[
+            ModelCheckpoint(OUTPUT_VIDEO_MODEL, save_best_only=True, monitor="val_loss"),
+            EarlyStopping(monitor="val_loss", patience=6, restore_best_weights=True),
+            ReduceLROnPlateau(monitor="val_loss", patience=3)
+        ]
+    )
+    video_model.save(OUTPUT_VIDEO_MODEL)
+
+    print("Training Completed Successfully.")
+
+
+# RUN
+if __name__ == "__main__":
+    train()
+

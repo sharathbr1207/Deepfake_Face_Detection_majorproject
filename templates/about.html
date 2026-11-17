@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About - DeepFake Detection</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        .content {
+            padding: 40px;
+        }
+        .section {
+            margin-bottom: 40px;
+        }
+        .section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .feature-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            border-left: 4px solid #667eea;
+        }
+        .feature-icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        .tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .tech-tag {
+            background: #667eea;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 25px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        .info-box {
+            background: #e7f3ff;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #007bff;
+            margin: 20px 0;
+        }
+        .warning-box {
+            background: #fff3cd;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #ffc107;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>ℹ️ About DeepFake Detection</h1>
+            <p>Understanding Image Authenticity Analysis</p>
+        </div>
+        
+        <div class="content">
+            <div class="section">
+                <h2>🔍 What is DeepFake Detection?</h2>
+                <p>This tool uses advanced computer vision and deep learning techniques to detect manipulated or forged images. It analyzes images using Error Level Analysis (ELA) to identify inconsistencies that may indicate digital manipulation.</p>
+            </div>
+
+            <div class="section">
+                <h2>⚙️ How It Works</h2>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">🖼️</div>
+                        <h3>Image Upload</h3>
+                        <p>Upload JPG, JPEG, or PNG images for analysis</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🔬</div>
+                        <h3>ELA Processing</h3>
+                        <p>Convert image to Error Level Analysis format</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🧠</div>
+                        <h3>AI Analysis</h3>
+                        <p>Deep learning model analyzes ELA patterns</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📊</div>
+                        <h3>Results</h3>
+                        <p>Get authenticity score with confidence level</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>🛠️ Technical Stack</h2>
+                <div class="tech-stack">
+                    <span class="tech-tag">Python</span>
+                    <span class="tech-tag">TensorFlow/Keras</span>
+                    <span class="tech-tag">Flask</span>
+                    <span class="tech-tag">PIL (Pillow)</span>
+                    <span class="tech-tag">NumPy</span>
+                    <span class="tech-tag">Error Level Analysis</span>
+                    <span class="tech-tag">Deep Learning</span>
+                    <span class="tech-tag">Convolutional Neural Networks</span>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>💡 About Error Level Analysis (ELA)</h2>
+                <p>ELA works by re-saving the image at a known quality level and comparing it to the original. Areas with different compression levels will show up as brighter spots, potentially indicating manipulation.</p>
+                
+                <div class="info-box">
+                    <strong>Key Points:</strong>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li>Authentic images have consistent error levels</li>
+                        <li>Manipulated areas show different compression artifacts</li>
+                        <li>ELA highlights these inconsistencies for analysis</li>
+                        <li>Deep learning model classifies these patterns</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>⚠️ Limitations & Disclaimer</h2>
+                <div class="warning-box">
+                    <p><strong>Important:</strong> This tool provides probabilistic analysis, not definitive proof. Results should be interpreted as indicators rather than absolute truth.</p>
+                    <p>Factors affecting accuracy include:</p>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li>Image quality and compression level</li>
+                        <li>Sophistication of manipulation techniques</li>
+                        <li>Training data limitations</li>
+                        <li>Image format and metadata preservation</li>
+                    </ul>
+                    <p style="margin-top: 15px; font-style: italic;">Always use multiple verification methods for critical decisions.</p>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>🚀 Getting Started</h2>
+                <p>To use this tool effectively:</p>
+                <ol style="margin-left: 20px; margin-top: 10px;">
+                    <li>Ensure you have proper training data in the dataset folder</li>
+                    <li>Train the model using the provided training script</li>
+                    <li>Upload images through the web interface</li>
+                    <li>Review results with appropriate caution and context</li>
+                </ol>
+            </div>
+
+            <div style="text-align: center;">
+                <a href="{{ url_for('index') }}" class="btn">← Back to Analyzer</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

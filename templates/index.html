@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DeepGuard | AI-Powered Deepfake Detection</title>
+    <link rel="stylesheet" href="../static/css/styles.css">
+    
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <div class="logo-icon floating">🛡️</div>
+                    <div class="logo-text">DeepScan</div>
+                </div>
+                <nav>
+                    <ul>
+                        <li><a href="#detect">Detect</a></li>
+                        <li><a href="#how-it-works">How It Works</a></li>
+                        <li><a href="#about">About</a></li>
+                        <li><a href="#team">Team</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <section class="upload-section container" id="detect">
+        <!-- FIXED FORM -->
+        <form id="uploadForm" method="POST" enctype="multipart/form-data">
+            <div class="upload-container" id="uploadArea">
+                <div class="upload-icon">📁</div>
+                <h2 class="upload-text">Upload File for Analysis</h2>
+
+                <!-- Buttons to switch -->
+                <div class="file-type-selector">
+                    <button class="type-btn active" data-type="image" type="button">
+                        📷 Image
+                    </button>
+                    <button class="type-btn" data-type="video" type="button">
+                        🎥 Video
+                    </button>
+                </div>
+
+                <p class="upload-subtext" id="fileRequirements">
+                    Supported formats: JPG, PNG, WEBP (Max 5MB)
+                </p>
+
+                <input
+                    type="file"
+                    name="file"
+                    id="fileInput"
+                    class="file-input"
+                    accept="image/*"
+                    required
+                />
+
+                <button class="upload-btn" id="uploadBtn" type="button">
+                    Select File
+                </button>
+
+                <div class="file-name" id="fileName"></div>
+
+                <!-- FIX: dynamic "action" attribute -->
+                <button
+                    class="submit-btn"
+                    id="submitBtn"
+                    type="submit"
+                    style="display: none;"
+                >
+                    Analyze File
+                </button>
+
+                <div class="loading" id="loading" style="display: none">
+                    <div class="spinner"></div>
+                    <p id="loadingText">Analyzing file...</p>
+                </div>
+            </div>
+        </form>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="how-it-works-section container" id="how-it-works">
+        <h2 class="section-title">How It Works</h2>
+        <div class="steps-container">
+            <div class="step">
+                <div class="step-icon">📤</div>
+                <h3>Upload</h3>
+                <p>Upload your image or video file for analysis</p>
+            </div>
+            <div class="step">
+                <div class="step-icon">🔍</div>
+                <h3>Analyze</h3>
+                <p>System first performs Error Level Analysis (ELA) on images or video frames to highlight compression artifacts caused by manipulation. The processed ELA images are fed into a CNN model, which learns to distinguish real vs fake patterns from these artifacts. For videos, multiple frames are sampled, converted to ELA, analyzed by the CNN, and the average confidence determines whether the video is REAL or FAKE.</p>
+            </div>
+            <div class="step">
+                <div class="step-icon">📊</div>
+                <h3>Get Results</h3>
+                <p>After converting the input image or sampled video frames into ELA images, the CNN model predicts a probability score indicating how likely each frame is fake. For videos, all frame scores are averaged to get a final confidence. If this confidence crosses the threshold (e.g., 0.5 or 0.8), the system labels the input as FAKE, otherwise REAL.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="about-section container" id="about">
+        <h2 class="section-title">About DeepScan</h2>
+        <div class="about-content">
+            <div class="about-text">
+                <p>System uses ELA (Error Level Analysis) to highlight pixel-level compression artifacts, which are strong indicators of manipulation.These ELA-enhanced images are passed through a CNN-based classifier that learns the visual differences between real and fake content.For videos, the model processes sampled frames and  averages their predictions, and produces a final confidence score identifying whether the video is real or fake.</p>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Team Section (Replaces Contact Section) -->
+    <section class="team-section container" id="team">
+        <h2 class="section-title">Team Members</h2>
+        <div class="team-container">
+            <div class="team-member">
+                    <h3 class="member-name">Ashik Gowda k</h3>
+                    <p class="member-no">1BI22RI007</p>
+            </div>
+            
+            <div class="team-member">
+                <h3 class="member-name">Hitesh N K</h3>
+                <p class="member-no">1BI22RI019</p>
+            </div>
+            
+            <div class="team-member">
+                <h3 class="member-name">Mallikarjun S</h3>
+                <p class="member-no">1BI22RI029</p>
+            </div>
+            
+            <div class="team-member">
+                <h3 class="member-name">Sharath B R</h3>
+                <p class="member-no">1BI22RI042</p>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <div class="logo-icon">🛡️</div>
+                    <div class="logo-text-footer">DeepScan</div>
+                </div>
+                <p>&copy; 2023 DeepScan. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Switch Image/Video
+        const typeButtons = document.querySelectorAll(".type-btn");
+        const fileInput = document.getElementById("fileInput");
+        const form = document.getElementById("uploadForm");
+
+        typeButtons.forEach((btn) => {
+            btn.addEventListener("click", () => {
+                document.querySelector(".type-btn.active").classList.remove("active");
+                btn.classList.add("active");
+
+                let type = btn.dataset.type;
+
+                if (type === "image") {
+                    form.action = "/analyze_image";
+                    fileInput.accept = "image/*";
+                    document.getElementById("fileRequirements").innerText =
+                        "Supported: JPG, PNG, WEBP (Max 5MB)";
+                } else {
+                    form.action = "/analyze_video";
+                    fileInput.accept = "video/*";
+                    document.getElementById("fileRequirements").innerText =
+                        "Supported: MP4, AVI, MOV (Max 50MB)";
+                }
+            });
+        });
+
+        // Show submit button after selecting file
+        document.getElementById("uploadBtn").onclick = () => fileInput.click();
+        fileInput.onchange = () => {
+            document.getElementById("submitBtn").style.display = "block";
+            document.getElementById("fileName").innerText = fileInput.files[0].name;
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+tempCodeRunnerFile.py
+
+# Virtual Environments
+.venv/
+venv/
+env/
+ENV/
+
+# Datasets
+dataset/
+ela_dataset/
+
+# Trained Models and Weights
+model/
+*.keras
+*.h5
+*.hdf5
+*.pkl
+*.pt
+*.pth
+*.onnx
+
+# Images and Media Files (no images or videos)
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+*.webp
+*.tiff
+*.mp4
+*.avi
+*.mov
+*.mkv
+uploads/
+temp_uploads/
+static/uploads/
+temp_image.jpg
+
+# Editor and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
